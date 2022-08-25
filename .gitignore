@@ -3,10 +3,10 @@ python3-oo/venv/
 python3-oo/.idea/
 python3-oo/.vscode/
 python3-oo/__pycache__/
-python3-p1/venv/
-python3-p1/__pycache__/
-python3-p1/.idea/
 python3-aoo/venv/
 python3-aoo/__pycache__/
 python3-aoo/.idea/
 python3-aoo/.vscode/
+venv
+__pycache__
+*/.idea/
