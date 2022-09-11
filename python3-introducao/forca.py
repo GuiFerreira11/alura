@@ -4,12 +4,12 @@ def jogar():
     print("*********************************")
 
     palavra_secreta = "banana"
-    letras_acertadas = ["*","*","*","*","*","*"]
-
-    print(letras_acertadas)
+    letras_acertadas = ["*", "*", "*", "*", "*", "*"]
 
     enforcou = False
     acertou = False
+
+    print(letras_acertadas)
 
     while not enforcou and not acertou:
 
