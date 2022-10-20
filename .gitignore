@@ -7,6 +7,10 @@ python3-aoo/venv/
 python3-aoo/__pycache__/
 python3-aoo/.idea/
 python3-aoo/.vscode/
+
+*.idea*
+*.vscode*
 venv
+env
 __pycache__
 */.idea/
