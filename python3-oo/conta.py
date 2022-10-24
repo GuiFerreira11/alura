@@ -13,8 +13,19 @@ class Conta:
     def depositar(self, valor):
         self.__saldo += valor
 
+    def __credito_disponivel(self, valor_a_sacar):
+        credito_total = self.__saldo + self.__limite
+        return valor_a_sacar <= credito_total
+
     def sacar(self, valor):
-        self.__saldo -= valor
+        if self.__credito_disponivel(valor):
+            self.__saldo -= valor
+        else:
+            print(
+                "Você não possui crédito suficiente para sacar o valor de R${:.2f}.".format(
+                    valor
+                )
+            )
 
     def transferir(self, valor, destino):
         self.sacar(valor)
@@ -39,3 +50,11 @@ class Conta:
     @limite.setter
     def limite(self, novo_limite):
         self.__limite = novo_limite
+
+    @staticmethod
+    def codigo_banco():
+        return "001"
+
+    @staticmethod
+    def codigos_dos_bancos():
+        return {"BB": "001", "Caixa": "104", "Bradesco": "237"}
