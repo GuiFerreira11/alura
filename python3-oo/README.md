@@ -18,7 +18,7 @@ Quanto “chamamos” o objeto o que é passado é o endereço na memória onde 
 <conta.Conta object at 0x7ffac3d96f10>
 ```
 
-Funções que começam com dois underline (`__`) são funções construtoras, elas são chamas logo após o instanciamento do objeto são executadas. Uma dessas funções é a `__init__` que inicializa o objeto, é nela que adicionamos as propriedades para construção do objeto e sempre tem como um do parâmetros a variável self que nada mais é do que a referência para o endereço na memória do objeto
+Funções que começam com dois underline (`__`) são funções construtoras, elas são chamas logo após o instanciamento do objeto. Uma dessas funções é a `__init__` que inicializa o objeto, é nela que adicionamos as propriedades para construção do objeto e sempre tem como um do parâmetros a variável `self` que nada mais é do que a referência para o endereço na memória do objeto
 
 ```python
 class Conta:
@@ -43,7 +43,7 @@ class Conta:
         self.numero = numero
         self.titular = titular
         self.saldo = saldo
-        self.limite = limit
+        self.limite = limite
 ```
 
 Agora precisamos passar essas 4 propriedades na hora de criar o objetos, caso contrario ele da erro
@@ -64,7 +64,7 @@ class Conta:
         self.numero = numero
         self.titular = titular
         self.saldo = saldo
-        self.limite = limit
+        self.limite = limite
 ```
 
 Dessa forma todas as contas que forem criadas terão o valor de limite igual a 1000 sem que eu precise informar isso. Caso eu queira alterar esse valor para alguma conta especifica, basta passar o valor diferente para o atributo na hora de construir o objeto
@@ -106,7 +106,7 @@ class Conta:
         self.saldo -= valor
 ```
 
-Para acessar os métodos de um objeto é igual ao atributo, com ponto e o nome do método, para precisamos utilizar parênteses `()`
+Para acessar os métodos de um objeto é igual ao atributo, com ponto e o nome do método, mas para o método precisamos utilizar parênteses `()`
 
 ```python
 >>> from conta import Conta
@@ -128,7 +128,7 @@ Quando modificamos uma variável que guardava o endereço para um objeto esse ob
 >>> conta = None
 ```
 
-É importante garantir que os atributos não possam ser alterados de forma direta, caso tenhamos um método para fazer essa alteração é mais segura utilizar apenas o método. Uma forma de fazer isso é tornando os atributos privados, de forma que dificulte o acesso do usuário a esses atributos, para fazer isso basta adicionar dois underline antes do nome do atributo dentro do `__init__`. 
+É importante garantir que os atributos não possam ser alterados de forma direta, caso tenhamos um método para fazer essa alteração é mais seguro utilizar apenas o método. Uma forma de fazer isso é tornando os atributos privados, de forma que dificulte o acesso do usuário a esses atributos, para fazer isso basta adicionar dois underline antes do nome do atributo dentro do `__init__`. 
 
 ```python
 class Conta:
@@ -150,7 +150,7 @@ class Conta:
         self.saldo -= valor
 ```
 
-Assim quando importar o module do python ele não vai disponibilizar esses atributos no autocomplete dele, apenas os métodos que estão públicos, contudo ainda é possível acessar atributos privados caso você saiba de existência deles, o acesso é feito da seguinte forma: 
+Assim quando importar o modulo do python ele não vai disponibilizar esses atributos no autocomplete dele, apenas os métodos que estão públicos, contudo ainda é possível acessar atributos privados caso você saiba de existência deles, o acesso é feito da seguinte forma: 
 
 ```python
 >>> from conta import Conta
