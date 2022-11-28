@@ -2,18 +2,18 @@ import re
 
 
 class Extrator_url:
-    def __init__(self, url, taxa):
-        self.url = self.sanitizador_url(url)
-        self.valida_url()
-        self.taxa = taxa
+    def __init__(self, url, taxa=5.5):
+        self.url = self.__sanitizador_url(url)
+        self.__valida_url()
+        self.__taxa = taxa
 
-    def sanitizador_url(self, url):
+    def __sanitizador_url(self, url):
         if type(url) == str:
             return url.strip()
         else:
             return ""
 
-    def valida_url(self):
+    def __valida_url(self):
         if not self.url:
             raise ValueError("A URL está vazia!")
 
@@ -23,20 +23,29 @@ class Extrator_url:
             raise ValueError("A URL não é válida!")
 
     @property
-    def indice_separador_base_parametros(self):
+    def taxa(self):
+        return self.__taxa
+
+    @taxa.setter
+    def taxa(self, nova_taxa):
+        self.__taxa = nova_taxa
+
+    @property
+    def __indice_separador_base_parametros(self):
         indice = self.url.find("?")
         return indice
 
     @property
     def url_base(self):
-        return self.url[: self.indice_separador_base_parametros]
+        return self.url[: self.__indice_separador_base_parametros]
 
     @property
     def url_parametros(self):
-        return self.url[self.indice_separador_base_parametros + 1 :]
+        return self.url[self.__indice_separador_base_parametros + 1 :]
 
-    def __get_valor_parametro(self, parametro):
+    def __valor_parametro(self, parametro):
         indice_parametro = self.url_parametros.find(parametro)
+        assert indice_parametro != -1, f"O parâmetro {parametro} não foi encontrado"
         indice_valor = indice_parametro + len(parametro) + 1
         indice_e_comercial = self.url_parametros.find("&", indice_valor)
         if indice_e_comercial == -1:
@@ -46,34 +55,34 @@ class Extrator_url:
         return valor
 
     @property
-    def valor_origem(self):
-        return self.__get_valor_parametro("moedaOrigem")
+    def moeda_origem(self):
+        return self.__valor_parametro("moedaOrigem")
 
     @property
-    def valor_destino(self):
-        return self.__get_valor_parametro("moedaDestino")
+    def moeda_destino(self):
+        return self.__valor_parametro("moedaDestino")
 
     @property
-    def valor_quantidade(self):
-        return self.__get_valor_parametro("quantidade")
+    def valor_para_converter(self):
+        return self.__valor_parametro("quantidade")
 
     def __validador_cambio(self):
-        if (self.valor_origem == "real" and self.valor_destino == "dolar") or (
-            self.valor_origem == "dolar" and self.valor_destino == "real"
+        if (self.moeda_origem == "real" and self.moeda_destino == "dolar") or (
+            self.moeda_origem == "dolar" and self.moeda_destino == "real"
         ):
             return True
         else:
             raise Exception(
-                f"O câmbio de {self.valor_origem} para {self.valor_destino} não está disponível"
+                f"O câmbio de {self.moeda_origem} para {self.moeda_destino} não está disponível"
             )
 
     @property
-    def valor_conversao(self):
+    def valor_convertido(self):
         self.__validador_cambio()
-        quantidade = float(self.valor_quantidade)
+        quantidade = float(self.valor_para_converter)
         conversao = (
             f"O valor de ${quantidade:.2f} dolares em reais é R${quantidade * self.taxa :.2f}"
-            if self.valor_origem == "dolar"
+            if self.moeda_origem == "dolar"
             else f"O valor de R${quantidade:.2f} reais em dolares é ${quantidade / self.taxa :.2f}"
         )
         return conversao
@@ -86,11 +95,3 @@ class Extrator_url:
 
     def __eq__(self, other):
         return self.url == other.url
-
-
-extrator = Extrator_url(
-    "https://bytebank.com/cambio?moedaOrigem=real&moedaDestino=dolar&quantidade=200",
-    5.5,
-)
-
-print(extrator.valor_conversao)
