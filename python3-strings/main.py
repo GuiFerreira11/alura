@@ -13,7 +13,6 @@ indice_interrogacao = url.find("?")
 url_base = url[:indice_interrogacao]
 url_parametro = url[indice_interrogacao + 1 :]
 
-
 # Busca por um parametro
 # parametro_busca = "quantidade"
 parametro_busca = "moedaDestino"
