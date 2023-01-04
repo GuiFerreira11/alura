@@ -26,6 +26,23 @@ class Funcionario:
         nome_quebrado = nome_completo.split()
         return nome_quebrado[-1]
 
+    def _verifica_socio(self):
+        sobrenomes = [
+            "Bragança",
+            "Windsor",
+            "Bourbon",
+            "Yamato",
+            "Al Saud",
+            "Khan",
+            "Tudor",
+            "Ptolomeu",
+        ]
+        return self.salario >= 100000 and self.sobrenome() in sobrenomes
+
+    def reducao_salario(self):
+        if self._verifica_socio():
+            self._salario = self.salario * 0.9
+
     def calcular_bonus(self):
         valor = self._salario * 0.1
         if valor > 1000:
