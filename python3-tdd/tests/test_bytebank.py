@@ -3,7 +3,7 @@ import pytest
 
 
 class TestClass:
-    @pytest.mark.skip
+    # @pytest.mark.skip
     def test_quando_idade_recebe_13_03_2000_deve_retornar_23(self):
         entrada = "13/03/2000"  # Given-contexto
         esperado = 23
