@@ -2,6 +2,7 @@ try:
     with open("./dados/contatos-novo.csv", encoding="latin_1", mode="r+") as file:
         for line in file:
             print(line, end="")
+        print(type(file.buffer))
 except FileNotFoundError:
     print("Arquivo não encontrado")
 except PermissionError:
