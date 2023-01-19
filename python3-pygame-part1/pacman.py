@@ -6,7 +6,7 @@ black = (0, 0, 0)
 width = 1280
 height = 960
 
-speed = 1
+speed = 0.1
 
 pacman_x = 40
 pacman_y = 40
@@ -37,7 +37,18 @@ while True:
     # Desenha na tela
 
     screen.fill(black)
-    pg.draw.circle(screen, yellow, (int(pacman_x), int(pacman_y)), radius, 0)
+    pg.draw.circle(screen, yellow, (pacman_x, pacman_y), radius, 0)
+    pg.draw.circle(screen, black, (pacman_x + 10, pacman_y - 20), 5, 0)
+    pg.draw.polygon(
+        screen,
+        black,
+        [
+            (pacman_x, pacman_y),
+            (pacman_x + radius, pacman_y),
+            (pacman_x + radius, pacman_y - radius),
+        ],
+        0,
+    )
     pg.display.update()
 
     # Eventos
