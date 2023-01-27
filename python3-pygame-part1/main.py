@@ -1,25 +1,34 @@
 import pygame as pg
-from pacman import Pacman
+import pacman
 
+yellow = (255, 255, 0)
+black = (0, 0, 0)
+white = (255, 255, 255)
+red = (255, 0, 0)
+green = (0, 255, 0)
+blue = (0, 0, 255)
 
 pg.init()
 
-width = 1280
-height = 1024
+width = 900
+height = 900
+size = width / 30
 
 screen = pg.display.set_mode((width, height), 0)
 
 clock = pg.time.Clock()
 
-pacman = Pacman(width)
+scenery = pacman.Scenery(size)
+pacman = pacman.Pacman(size)
 
 while True:
 
-    clock.tick(24)
+    clock.tick(60)
 
     pacman.move_pacman()
 
-    screen.fill(Pacman.black)
+    screen.fill(black)
+    scenery.draw_scenery(screen)
     pacman.draw_pacman(screen)
     pg.display.update()
 
