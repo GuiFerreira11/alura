@@ -17,12 +17,15 @@ while True:
 
     clock.tick(24)
 
-    pacman.move_pacman(width, height)
+    pacman.move_pacman()
 
     screen.fill(Pacman.black)
     pacman.draw_pacman(screen)
     pg.display.update()
 
-    for e in pg.event.get():
+    event = pg.event.get()
+    for e in event:
         if e == pg.QUIT:
             exit()
+    pacman.process_event(event)
+    # pacman.process_event_mouse(event)
