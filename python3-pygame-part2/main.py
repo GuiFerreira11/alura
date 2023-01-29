@@ -5,8 +5,9 @@ yellow = (255, 255, 0)
 black = (0, 0, 0)
 white = (255, 255, 255)
 red = (255, 0, 0)
-green = (0, 255, 0)
-blue = (0, 0, 255)
+purple = (255, 184, 255)
+cyan = (0, 255, 255)
+orange = (255, 184, 82)
 
 pg.init()
 
@@ -21,6 +22,10 @@ screen = pg.display.set_mode((width, height), 0)
 clock = pg.time.Clock()
 
 pacman = pac.Pacman(size)
+blinky = pac.Ghost(red, size)
+pinky = pac.Ghost(purple, size)
+inky = pac.Ghost(cyan, size)
+clyde = pac.Ghost(orange, size)
 scenery = pac.Scenery(size, pacman)
 
 while True:
@@ -33,6 +38,7 @@ while True:
     screen.fill(black)
     scenery.draw(screen, font)
     pacman.draw(screen)
+    blinky.draw(screen)
     pg.display.update()
 
     pg.time.delay(70)

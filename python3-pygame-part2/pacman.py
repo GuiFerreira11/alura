@@ -4,8 +4,6 @@ from abc import ABCMeta, abstractmethod
 yellow = (255, 255, 0)
 black = (0, 0, 0)
 white = (255, 255, 255)
-red = (255, 0, 0)
-green = (0, 255, 0)
 blue = (0, 0, 255)
 
 
@@ -27,7 +25,7 @@ class Scenery(GameElements):
     def __init__(self, size, player):
         self.pacman = player
         self.size = size
-        self.points = 0
+        self.score = 0
         self.matrix = [
             [
                 2,
@@ -908,7 +906,7 @@ class Scenery(GameElements):
             if self.matrix[lin][col] != 2:
                 self.pacman.movement_aproved()
                 if self.matrix[lin][col] == 1:
-                    self.points += 1
+                    self.score += 1
                     self.matrix[lin][col] = 0
 
     def draw(self, screen, font):
@@ -928,7 +926,7 @@ class Scenery(GameElements):
 
     def draw_score(self, screen, font):
         x_position = 30 * self.size
-        img_text = font.render(f"Score: {self.points}", True, yellow)
+        img_text = font.render(f"Score: {self.score}", True, yellow)
         screen.blit(img_text, (x_position, 50))
 
     def event_processing(self, events):
@@ -1001,3 +999,65 @@ class Pacman(GameElements):
                     self.speed_y = 0
                 elif e.key == pg.K_DOWN:
                     self.speed_y = 0
+
+
+class Ghost(GameElements):
+    def __init__(self, color, size, column=6, line=8):
+        self.column = column
+        self.line = line
+        self.color = color
+        self.size = size
+
+    def rule_calculation(self):
+        return super().rule_calculation()
+
+    def draw(self, screen):
+        # draw ghost's body
+        slice = self.size / 14
+        px = int(self.column * self.size)
+        py = int(self.line * self.size)
+        points = [
+            (int(px), int(py + self.size)),
+            (int(px + slice * 1), int(py + slice * 6)),
+            (int(px + slice * 2), int(py + slice * 3)),
+            (int(px + slice * 3), int(py + slice * 2)),
+            (int(px + slice * 4), int(py + slice * 1)),
+            (int(px + slice * 6), int(py)),
+            (int(px + slice * 8), int(py)),
+            (int(px + slice * 10), int(py + slice * 1)),
+            (int(px + slice * 11), int(py + slice * 2)),
+            (int(px + slice * 12), int(py + slice * 3)),
+            (int(px + slice * 13), int(py + slice * 6)),
+            (int(px + self.size), int(py + self.size)),
+            (int(px + slice * 13), int(py + slice * 14)),
+            (int(px + slice * 11), int(py + slice * 11)),
+            (int(px + slice * 9), int(py + slice * 14)),
+            (int(px + slice * 7), int(py + slice * 11)),
+            (int(px + slice * 5), int(py + slice * 14)),
+            (int(px + slice * 3), int(py + slice * 11)),
+            (int(px + slice * 1), int(py + slice * 14)),
+        ]
+        pg.draw.polygon(screen, self.color, points, 0)
+
+        # draw ghost's eyes
+        external_eye_radius = int(slice * 1.5)
+        internal_eye_radius = int(slice * 0.75)
+
+        left_eye_x = int(px + slice * 5)
+        left_eye_y = int(py + slice * 3)
+
+        right_eye_x = int(px + slice * 9)
+        right_eye_y = int(py + slice * 3)
+
+        pg.draw.circle(screen, white, (left_eye_x, left_eye_y), external_eye_radius, 0)
+        pg.draw.circle(screen, black, (left_eye_x, left_eye_y), internal_eye_radius, 0)
+
+        pg.draw.circle(
+            screen, white, (right_eye_x, right_eye_y), external_eye_radius, 0
+        )
+        pg.draw.circle(
+            screen, black, (right_eye_x, right_eye_y), internal_eye_radius, 0
+        )
+
+    def event_processing(self):
+        return super().event_processing()
