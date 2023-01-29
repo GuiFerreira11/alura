@@ -1,4 +1,5 @@
 import pygame as pg
+from pygame.draw import line
 
 yellow = (255, 255, 0)
 black = (0, 0, 0)
@@ -9,8 +10,10 @@ blue = (0, 0, 255)
 
 
 class Scenery:
-    def __init__(self, size):
+    def __init__(self, size, player):
+        self.pacman = player
         self.size = size
+        self.pontos = 0
         self.matrix = [
             [
                 2,
@@ -884,6 +887,16 @@ class Scenery:
             ],
         ]
 
+    def player_movement(self):
+        col = self.pacman.column_intent
+        lin = self.pacman.line_intent
+        if 0 <= col <= 27 and 0 <= lin <= 28:
+            if self.matrix[lin][col] != 2:
+                self.pacman.movement_aproved()
+                if self.matrix[lin][col] == 1:
+                    self.pontos += 1
+                    self.matrix[lin][col] = 0
+
     def draw_scenery(self, screen):
         for id_line, line in enumerate(self.matrix):
             self.draw_line(screen, id_line, line)
@@ -896,7 +909,7 @@ class Scenery:
             color = blue if column == 2 else black
             pg.draw.rect(screen, color, (x, y, self.size, self.size), 0)
             if column == 1:
-                pg.draw.circle(screen, red, (x + half, y + half), self.size / 5, 0)
+                pg.draw.circle(screen, yellow, (x + half, y + half), self.size / 5, 0)
 
 
 class Pacman:
@@ -910,14 +923,20 @@ class Pacman:
         self.speed = 1
         self.speed_x = 0
         self.speed_y = 0
+        self.column_intent = self.column
+        self.line_intent = self.line
 
     def move_pacman(self):
         # change pacman position
-        self.column = self.column + self.speed_x
-        self.line = self.line + self.speed_y
+        self.column_intent = self.column + self.speed_x
+        self.line_intent = self.line + self.speed_y
 
         self.center_x = self.size * self.column + self.radius
         self.center_y = self.size * self.line + self.radius
+
+    def movement_aproved(self):
+        self.column = self.column_intent
+        self.line = self.line_intent
 
     def draw_pacman(self, screen):
         # draw pacman's body
