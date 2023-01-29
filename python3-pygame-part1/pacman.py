@@ -1,5 +1,4 @@
 import pygame as pg
-from pygame.draw import line
 
 yellow = (255, 255, 0)
 black = (0, 0, 0)
@@ -13,7 +12,7 @@ class Scenery:
     def __init__(self, size, player):
         self.pacman = player
         self.size = size
-        self.pontos = 0
+        self.points = 0
         self.matrix = [
             [
                 2,
@@ -47,7 +46,7 @@ class Scenery:
             ],
             [
                 2,
-                1,
+                0,
                 1,
                 1,
                 1,
@@ -894,12 +893,13 @@ class Scenery:
             if self.matrix[lin][col] != 2:
                 self.pacman.movement_aproved()
                 if self.matrix[lin][col] == 1:
-                    self.pontos += 1
+                    self.points += 1
                     self.matrix[lin][col] = 0
 
-    def draw_scenery(self, screen):
+    def draw_scenery(self, screen, font):
         for id_line, line in enumerate(self.matrix):
             self.draw_line(screen, id_line, line)
+        self.draw_score(screen, font)
 
     def draw_line(self, screen, id_line, line):
         for id_column, column in enumerate(line):
@@ -910,6 +910,11 @@ class Scenery:
             pg.draw.rect(screen, color, (x, y, self.size, self.size), 0)
             if column == 1:
                 pg.draw.circle(screen, yellow, (x + half, y + half), self.size / 5, 0)
+
+    def draw_score(self, screen, font):
+        x_position = 30 * self.size
+        img_text = font.render(f"Score: {self.points}", True, yellow)
+        screen.blit(img_text, (x_position, 50))
 
 
 class Pacman:

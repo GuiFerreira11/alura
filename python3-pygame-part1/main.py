@@ -10,6 +10,8 @@ blue = (0, 0, 255)
 
 pg.init()
 
+font = pg.font.SysFont("arial", 32, True, False)
+
 width = 1200
 height = 900
 size = height / 30
@@ -29,7 +31,7 @@ while True:
     scenery.player_movement()
 
     screen.fill(black)
-    scenery.draw_scenery(screen)
+    scenery.draw_scenery(screen, font)
     pacman.draw_pacman(screen)
     pg.display.update()
 
