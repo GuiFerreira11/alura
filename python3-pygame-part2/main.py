@@ -22,23 +22,27 @@ screen = pg.display.set_mode((width, height), 0)
 clock = pg.time.Clock()
 
 pacman = pac.Pacman(size)
-blinky = pac.Ghost(red, size)
-pinky = pac.Ghost(purple, size)
-inky = pac.Ghost(cyan, size)
-clyde = pac.Ghost(orange, size)
-scenery = pac.Scenery(size, pacman)
+blinky = pac.Ghost(red, size, 11, 14)
+pinky = pac.Ghost(purple, size, 13, 13)
+inky = pac.Ghost(cyan, size, 14, 15)
+clyde = pac.Ghost(orange, size, 16, 13)
+scenery = pac.Scenery(size, pacman, blinky)
 
 while True:
 
     clock.tick(60)
 
     pacman.rule_calculation()
+    blinky.rule_calculation()
     scenery.rule_calculation()
 
     screen.fill(black)
     scenery.draw(screen, font)
     pacman.draw(screen)
     blinky.draw(screen)
+    pinky.draw(screen)
+    inky.draw(screen)
+    clyde.draw(screen)
     pg.display.update()
 
     pg.time.delay(70)
