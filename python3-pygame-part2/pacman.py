@@ -26,10 +26,25 @@ class GameElements(metaclass=ABCMeta):
         pass
 
 
+class Movables(metaclass=ABCMeta):
+    @abstractmethod
+    def movement_aproved(self):
+        pass
+
+    @abstractmethod
+    def movement_denied(self, directions):
+        pass
+
+    @abstractmethod
+    def corner(self, directions):
+        pass
+
+
 class Scenery(GameElements):
-    def __init__(self, size, player, enemy):
+    def __init__(self, size, player):
         self.pacman = player
-        self.ghost = enemy
+        self.movables = []
+        self.add_movable(player)
         self.size = size
         self.score = 0
         self.matrix = [
@@ -906,23 +921,28 @@ class Scenery(GameElements):
         ]
 
     def rule_calculation(self):
-        directions = self.get_directions(self.ghost.line, self.ghost.column)
-        if len(directions) >= 3:
-            self.ghost.corner(directions)
-        col = self.pacman.column_intent
-        lin = self.pacman.line_intent
-        if 0 <= col <= 27 and 0 <= lin <= 28:
-            if self.matrix[lin][col] != 2:
-                self.pacman.movement_aproved()
-                if self.matrix[lin][col] == 1:
+        for movable in self.movables:
+            col = int(movable.column)
+            lin = int(movable.line)
+            col_intent = int(movable.column_intent)
+            lin_intent = int(movable.line_intent)
+            directions = self.get_directions(lin, col)
+            if len(directions) >= 3:
+                movable.corner(directions)
+            if (
+                0 <= col <= 27
+                and 0 <= lin <= 27
+                and self.matrix[lin_intent][col_intent] != 2
+            ):
+                movable.movement_aproved()
+                if isinstance(movable, Pacman) and self.matrix[lin][col] == 1:
                     self.score += 1
                     self.matrix[lin][col] = 0
-        col = int(self.ghost.column_intent)
-        lin = int(self.ghost.line_intent)
-        if 0 <= col <= 27 and 0 <= lin <= 28 and self.matrix[lin][col] != 2:
-            self.ghost.movement_aproved()
-        else:
-            self.ghost.movement_denied(directions)
+            else:
+                movable.movement_denied(directions)
+
+    def add_movable(self, obj):
+        self.movables.append(obj)
 
     def draw(self, screen, font):
         for id_line, line in enumerate(self.matrix):
@@ -962,7 +982,7 @@ class Scenery(GameElements):
                 exit()
 
 
-class Pacman(GameElements):
+class Pacman(GameElements, Movables):
     def __init__(self, size, column=1, line=1):
         self.column = column
         self.line = line
@@ -987,6 +1007,13 @@ class Pacman(GameElements):
     def movement_aproved(self):
         self.column = self.column_intent
         self.line = self.line_intent
+
+    def movement_denied(self, directions):
+        self.column_intent = self.column
+        self.line_intent = self.line
+
+    def corner(self, directions):
+        pass
 
     def draw(self, screen):
         # draw pacman's body
@@ -1028,7 +1055,7 @@ class Pacman(GameElements):
                     self.speed_y = 0
 
 
-class Ghost(GameElements):
+class Ghost(GameElements, Movables):
     def __init__(self, color, size, column=6, line=8):
         self.column = column
         self.line = line
