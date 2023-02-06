@@ -34,7 +34,8 @@ scenery.add_movable(clyde)
 
 while True:
 
-    clock.tick(60)
+    # clock.tick(60)
+    pg.time.delay(70)
 
     pacman.rule_calculation()
     blinky.rule_calculation()
@@ -51,8 +52,6 @@ while True:
     inky.draw(screen)
     clyde.draw(screen)
     pg.display.update()
-
-    pg.time.delay(70)
 
     event = pg.event.get()
     pacman.event_processing(event)

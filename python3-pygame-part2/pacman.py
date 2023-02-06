@@ -48,6 +48,7 @@ class Scenery(GameElements):
         self.state = 0  # 0-playing 1-pause 2-gameover 3-win
         self.size = size
         self.score = 0
+        self.life = 5
         self.matrix = [
             [
                 2,
@@ -943,7 +944,11 @@ class Scenery(GameElements):
                 and lin == self.pacman.line
                 and col == self.pacman.column
             ):
-                self.state = 2
+                self.life -= 1
+                if self.life <= 0:
+                    self.state = 2
+                else:
+                    self.pacman.restart()
             else:
                 if (
                     0 <= col_intent <= 27
@@ -996,7 +1001,7 @@ class Scenery(GameElements):
         self.draw_text_center("P A U S E", screen, font)
 
     def draw_gameover(self, screen, font):
-        self.draw_text_center("G A M E   O V E R !", screen, font)
+        self.draw_text_center("G A M E   O V E R  !", screen, font)
 
     def draw_win(self, screen, font):
         self.draw_text_center("Y O U   W I N   ! ! !", screen, font)
@@ -1026,7 +1031,9 @@ class Scenery(GameElements):
     def draw_score(self, screen, font):
         x_position = 30 * self.size
         img_text = font.render(f"Score: {self.score}", True, yellow)
+        img_life = font.render(f"Lifes: {self.life}", True, yellow)
         screen.blit(img_text, (x_position, 50))
+        screen.blit(img_life, (x_position, 100))
 
     def event_processing(self, events):
         for e in events:
@@ -1036,7 +1043,7 @@ class Scenery(GameElements):
                 if e.key == pg.K_p:
                     if self.state == 0:
                         self.state = 1
-                    else:
+                    elif self.state == 1:
                         self.state = 0
 
 
@@ -1074,6 +1081,10 @@ class Pacman(GameElements, Movables):
 
     def corner(self, directions):
         pass
+
+    def restart(self):
+        self.line = 1
+        self.column = 1
 
     def draw(self, screen):
         # draw pacman's body
