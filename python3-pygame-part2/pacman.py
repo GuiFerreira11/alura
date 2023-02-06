@@ -45,6 +45,7 @@ class Scenery(GameElements):
         self.pacman = player
         self.movables = []
         self.add_movable(player)
+        self.state = 0  # 0-playing 1-pause 2-gameover 3-win
         self.size = size
         self.score = 0
         self.matrix = [
@@ -921,6 +922,14 @@ class Scenery(GameElements):
         ]
 
     def rule_calculation(self):
+        if self.state == 0:
+            self.rule_calculation_playing()
+        elif self.state == 1:
+            self.rule_calculation_pause()
+        elif self.state == 2:
+            self.rule_calculation_gameover()
+
+    def rule_calculation_playing(self):
         for movable in self.movables:
             col = int(movable.column)
             lin = int(movable.line)
@@ -930,24 +939,67 @@ class Scenery(GameElements):
             if len(directions) >= 3:
                 movable.corner(directions)
             if (
-                0 <= col <= 27
-                and 0 <= lin <= 27
-                and self.matrix[lin_intent][col_intent] != 2
+                isinstance(movable, Ghost)
+                and lin == self.pacman.line
+                and col == self.pacman.column
             ):
-                movable.movement_aproved()
-                if isinstance(movable, Pacman) and self.matrix[lin][col] == 1:
-                    self.score += 1
-                    self.matrix[lin][col] = 0
+                self.state = 2
             else:
-                movable.movement_denied(directions)
+                if (
+                    0 <= col_intent <= 27
+                    and 0 <= lin_intent <= 27
+                    and self.matrix[lin_intent][col_intent] != 2
+                ):
+                    movable.movement_aproved()
+                    if isinstance(movable, Pacman) and self.matrix[lin][col] == 1:
+                        self.score += 1
+                        self.matrix[lin][col] = 0
+                        if not any(1 in line for line in self.matrix):
+                            self.state = 3
+                else:
+                    movable.movement_denied(directions)
+
+    def rule_calculation_pause(self):
+        pass
+
+    def rule_calculation_gameover(self):
+        pass
 
     def add_movable(self, obj):
         self.movables.append(obj)
 
     def draw(self, screen, font):
+        if self.state == 0:
+            self.draw_playing(screen, font)
+        elif self.state == 1:
+            self.draw_playing(screen, font)
+            self.draw_pause(screen, font)
+        elif self.state == 2:
+            self.draw_playing(screen, font)
+            self.draw_gameover(screen, font)
+        elif self.state == 3:
+            self.draw_playing(screen, font)
+            self.draw_win(screen, font)
+
+    def draw_playing(self, screen, font):
         for id_line, line in enumerate(self.matrix):
             self.draw_line(screen, id_line, line)
         self.draw_score(screen, font)
+
+    def draw_text_center(self, text, screen, font):
+        img_text = font.render(text, True, yellow)
+        pos_x = (screen.get_width() - img_text.get_width()) // 2
+        pos_y = (screen.get_height() - img_text.get_height()) // 2
+        screen.blit(img_text, (pos_x, pos_y))
+
+    def draw_pause(self, screen, font):
+        self.draw_text_center("P A U S E", screen, font)
+
+    def draw_gameover(self, screen, font):
+        self.draw_text_center("G A M E   O V E R !", screen, font)
+
+    def draw_win(self, screen, font):
+        self.draw_text_center("Y O U   W I N   ! ! !", screen, font)
 
     def get_directions(self, line, column):
         directions = []
@@ -980,6 +1032,12 @@ class Scenery(GameElements):
         for e in events:
             if e.type == pg.QUIT:
                 exit()
+            if e.type == pg.KEYDOWN:
+                if e.key == pg.K_p:
+                    if self.state == 0:
+                        self.state = 1
+                    else:
+                        self.state = 0
 
 
 class Pacman(GameElements, Movables):
@@ -995,6 +1053,8 @@ class Pacman(GameElements, Movables):
         self.speed_y = 0
         self.column_intent = self.column
         self.line_intent = self.line
+        self.mouth_opening = 0
+        self.mouth_speed = 1
 
     def rule_calculation(self):
         # change pacman position
@@ -1019,11 +1079,18 @@ class Pacman(GameElements, Movables):
         # draw pacman's body
         pg.draw.circle(screen, yellow, (self.center_x, self.center_y), self.radius, 0)
 
+        self.mouth_opening += self.mouth_speed
+
+        if self.mouth_opening > self.radius * 0.75:
+            self.mouth_speed = -1
+        if self.mouth_opening <= 0:
+            self.mouth_speed = 1
+
         # draw pacman's mouth
         mouth = [
             (self.center_x, self.center_y),
-            (self.center_x + self.radius, self.center_y),
-            (self.center_x + self.radius, self.center_y - self.radius),
+            (self.center_x + self.radius, self.center_y + self.mouth_opening),
+            (self.center_x + self.radius, self.center_y - self.mouth_opening),
         ]
         pg.draw.polygon(screen, black, mouth, 0)
 
@@ -1138,4 +1205,4 @@ class Ghost(GameElements, Movables):
         pg.draw.circle(screen, blue, (right_eye_x, right_eye_y), internal_eye_radius, 0)
 
     def event_processing(self):
-        return super().event_processing()
+        pass
