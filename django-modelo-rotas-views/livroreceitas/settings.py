@@ -24,6 +24,10 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = str(os.getenv("SECRET_KEY"))
+POSTGRE_DB_NAME = str(os.getenv("POSTGRE_DB_NAME"))
+POSTGRE_DB_USER = str(os.getenv("POSTGRE_DB_USER"))
+POSTGRE_KEY = str(os.getenv("POSTGRE_KEY"))
+POSTGRE_HOST = str(os.getenv("POSTGRE_HOST"))
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -79,8 +83,11 @@ WSGI_APPLICATION = "livroreceitas.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": POSTGRE_DB_NAME,
+        "USER": POSTGRE_DB_USER,
+        "PASSWORD": POSTGRE_KEY,
+        "HOST": POSTGRE_HOST,
     }
 }
 
