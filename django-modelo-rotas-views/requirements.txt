@@ -1,6 +1,15 @@
 Django==3.2.14
+django-stubs==1.15.0
+django-stubs-ext==0.7.0
+mypy==1.1.1
+mypy-extensions==1.0.0
 psycopg2==2.9.5
 psycopg2-binary==2.9.5
 python-dotenv==0.21.1
 pytz==2022.7.1
 sqlparse==0.4.3
+tomli==2.0.1
+typed-ast==1.5.4
+types-pytz==2022.7.1.2
+types-PyYAML==6.0.12.8
+typing_extensions==4.5.0

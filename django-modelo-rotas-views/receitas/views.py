@@ -1,16 +1,14 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
+from .models import Receita
 
 
 def index(request):
-    receitas = {
-        1: "Lasanha",
-        2: "Sopa de Legumes",
-        3: "Sovete",
-        4: "Bolo de chocolate",
-    }
-    lista_de_receitas = {"nome_das_receitas": receitas}
+    receitas = Receita.objects.all()
+    lista_de_receitas = {"receitas": receitas}
     return render(request, "receitas/index.html", lista_de_receitas)
 
 
-def receita(request):
-    return render(request, "receitas/receita.html")
+def receita(request, receita_id):
+    receita = get_object_or_404(Receita, pk=receita_id)
+    receita_a_exibir = {"receita": receita}
+    return render(request, "receitas/receita.html", receita_a_exibir)
