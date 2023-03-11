@@ -1,355 +1,181 @@
-# Django: modelos rotas e views
+# Integração de modelos no Django: Filtros, buscas e admin
 
-Nesse curso vamos utilizar um ambiente virutal para desenvolver nossa aplicação, para que as bibliotecas que instalarmos fiquem restritas a esse projeto. A criação de um ambiente virtual pode ser feita com:
+O curso atual é a continuação do curso anterior Django: modelos rotas e views.
 
-```bash
-python3 -m venv ./venv
-```
-
-Precisamos ativar o ambiente virtual antes de instalar as bibliotecas/dependências, para isso precisamos dar um `source` no arquivo `activate` que esta dentro da pasta `venv/bin/`. Quando terminar o desenvolvimento da aplicação e quiser sair do ambiente virtual basta digitar o comando `deactivate`. 
-
-Após entrar no ambiente virtual podemos utilizar o pip para instalar o framework django `python3 -m pip install django`.
-
-O django possui varios comando acessíveis através do comando `django-admin`, podemos ver uma lista dos comandos disponíveis com `django-admin help`. O comando que devemos utilizar para iniciar um novo projeto é `django-admin startproject nome_do_projeto caminho_para_o_projeto`. O nome do projeto nós podemos definir de acordo com a finalidade do projeto, já o caminho para o projeto, se deixarmos em branco o django irá criar um diretório com o mesmo nome que demos ao nosso projeto e então irá criar os arquivos e subpastas com o mesmo nome do nosso projeto dentro desse diretório, já se utilizarmos a notação para o diretório atual `.`, ele criará esses arquivos no diretório que estamos. Por exemplo, ao criarmos nosso livro de receitas podemos inicializar nosso projeto com `django-admin startproject livroreceitas .`. Com isso o django criará os seguintes arquivos e diretórios:
-
-- manage.py - arquivo utilizado para acessar algums comando do django e gerenciar nosso projeto
-- livroreceitas
-    - **init**.py - arquivo em branco que irá indicar para o python que a pasta atual é um pacote
-    - settings.py - arquivo importante que contém as configurações relacionadas a nossa aplicação, é nele por exemplo que podemos tanto trocar a lingua de exibição da nossa aplicação de `en-us` para `pt-br` em `LANGUAGE_CODE =` e também trocar o `TIME_ZONE =` de `UTC` para `America/Sao_Paulo`.
-    - urls.py - um arquivo com a declaração de todasa as URLs do nosso projeto, é como um índice dentro do django.
-    - wsgi.py - é um ponto de integração com servidores web compatíveis com WSGI, porém essa parte não será aborada no curso.
-
-Dentro do arquivo `settings.py` uma `SECURITY_KEY` é gerada. Essa chave é muito importante e não deve ser enviada junto com o restante do projeto para o github, mas ao mesmo tempo é necessário para que o django possa rodar corretamente. Uma alternativa para armazenar essa informação é em um arquivo `.env`.  Para isso devemos instalar o pacote `python-dotenv` com o `pip`. Podemos agora copiar a `SECURITY_KEY` para dentro do arquivo `.env` e importar da biblioteca `dotenv` o modulo `load_dotenv` dentro do arquivo `settings.py`. Após fazer essa importação precisamos de fato carregar essas variáveis de ambiente e atribui-las a variáveis do nosso código e isso é feito da seguinte forma:
-
-Arquivo `.env`:
-
-```
-SECRET_KEY = sequencia_de_caracteres_gerado_pelo_django
-```
-
-Arquivo `settings.py`:
+Começamos melhorando a vizualização do admin da lista de receitas disponíveis, pois o padrão é ficar salvo como `Receita object(id)`. No início não teria tanto problema, mas conforme o número de receitas fosse aumentado, seria difícil lembrar qual receita é qual para poder fazer uma modificação. Por isso criamos uma classe no nosso arquivo `admin.py`, que herda da classe `admin.ModelAdmin` e dentro dessa classe definimos duas propriedades, a primeira será `list_display`, que será uma lista contendo os campos do meu modelo que eu quero que apareçam quando eu for gerenciar as minhas receitas e a segunda propriedades será a `list_display_links`, essa propriedade armazena os campos que serão considerados links para acessar e editar cada receita. Após criar a nossa classe precisamos fazer com que o registro do nosso admin também inclua essa classe, ficanod assim:
 
 ```python
-...
+from django.contrib import admin
+from .models import Receita
 
-import os
-from dotenv import load_dotenv
+class ListandoReceita(admin.ModelAdmin):
+    list_display = ("id", "nome_receita", "categoria", "data_receita")
+    list_display_links = ("id", "nome_receita")
 
-load_dotenv()
-
-...
-
-SECRET_KEY = str(os.getenv("SECRET_KEY"))
+admin.site.register(Receita, ListandoReceita)
 ```
 
-Com o nosso projeto criado, já é possível subir nosso servidor e acessa-lo na web, para isso utilizamos o arquivo `manage.py` junto com o comando `runserver`. A porta padrão que o django irá utilizar é a `8000`, porém podemos alterar essea porta para a clássica `8080`, basta passar essa porta como argumento, logo após o `runserver`, assim o comando todo fica `python manage.py runserver 8008`. Podemos acessar agora essa página com [localhost:8080](http://localhost:8080) ou [http://127.0.0.1:8080](http://127.0.0.1:8080).
-
-Podemos agora começar a criar nosso app, não um app mobile, mas um app no conceito do django, uma aplicação. O que criamos anteriormente foi um projeto. Um projeto nada mais é do que um conjunto de configurações e aplicações, assim um projeto pode conter várias aplicações. Uma aplicação por sua vez está encarregada de realizar determinada ação e/ou função.
-
-Podemos manter um terminal aberto rodando nosso servidor e outro para criar nossa aplicação, pois o servidor possui um carregamento automático, asim não precisamos ficar reiniciando o servidor a acada alteração, salvo algumas exeções.
-
-A criação de um app é parecida com a de um projeto, poré utilizamos o arquivo `manage.py` ao invés do `django-admin` e o comando `startapp` ao invés do `startproject`. Quando iniciamos um novo app, assim como quando iniciamos um novo projeto, o django irá criar um novo diretóriocom vários arquivos dentro. Por exemplo `python manage.py startapp receitas`
-
-- receitas
-    - **init**.py
-    - admin.py
-    - apps.py
-    - models.py
-    - tests.py
-    - views.py
-    - migrations
-        - __init.py
-
-Dentro do arquivo `apps.py` temos uma classe/objeto com algumas configurações do nosso app e uma variavel com o nome da nossa aplicação. Precisamos registrar esse nome no nosso projeto e esse registro é feito no arquivo settings.py, na lista `INSTALLED_APPS`.
-
-Para poder acessar esse nosso app precisamos de uma URL para ele, como não temos o arquivo `urls.py` dentro do diretório do nosso app precisamos cria-lo. Dentro desse arquivo precisamos as urls do django e todas as views, para isso usamos:
+Outras mudanças que podemos fazer na exibição da lista de receitas também são: permitir uma busca pelo nome da receita, exibir um filtro para por tipo de receita e criar uma paginação para quando nosso DB de receitas ficar muito grande o scroll da lista de receitas não ficar gigante. Todas essas funcionalidades podem ser adicionadas acrescentando propriedades específicas a classe criamos.
 
 ```python
-from django.urls import path
-from . import views
+from django.contrib import admin
+from .models import Receita
+
+class ListandoReceita(admin.ModelAdmin):
+    list_display = ("id", "nome_receita", "categoria", "data_receita")
+    list_display_links = ("id", "nome_receita")
+    search_fields = ("nome_receita",)
+    list_filter = ("categoria",)
+    list_per_page = 10
+
+admin.site.register(Receita, ListandoReceita)
 ```
 
-Dentro desse arquivo criamos uma lista com os padrões de urls que utilizaremos
+Tanto `search_fields`, como `list_filter` precisam ser listas ou tuplas, por isso é necessário a virgula.
+
+Um campo das nossas receitas que não estávamos utilizando era o de pessoa, onde indicaria qual o nome da pessoa que enviou aquela receita. Para fazer esse controle vamos criar um novo app chamado `pessoa`. Basta utilizar o comando `python manage.py startapp pessoa`. Com o app criado, registramos ele no arquivo `settings.py` do nosso projeto. Agora criamos um modelo no arquivo `models.py` com os campos `nome` e `email` como `models.CharField(max_length=200)` e fazemos a migração desse modelo para o DB com `python manage.py makemigrations` e `python manage.py migrate`. Com a migração feita registramos esse modelo dentro do arquivo `admin.py` e melhoramos sua vizualização com:
 
 ```python
-from django.urls import path
-from . import views
+from django.contrib import admin
+from .models import Pessoa
 
-urlpatterns = [
-    path("", views.index, name="index")
-]
+class ListandoPessoas(admin.ModelAdmin):
+    list_display = ("id", "nome", "email")
+    list_display_links = ("id", "nome")
+    search_fields = ("nome",)
+    list_per_page = 10
+
+admin.site.register(Pessoa, ListandoPessoas)
 ```
 
-Onde o primeiro parâmetro, que está vazio, indica o caminho para a raiz da nossa aplicação, ou seja o caminho [localhost:8080/](http://localhost:8080/), o segundo é o responsável por atender a requisição quando ela for realizada para o caminho descrito anteriormente e por ultimo o namespace do aplicativo para essa entrada de url.
+Precisamos agora relacionar o banco de dados de `Pessoa` com o banco de dados de `Receita`, porém como vamos adicionar um nova campo no nosso banco de dados que não existia antes e ele vai estar vinculado a entradas de outra tabela, vamos excluir as receitas que já estão cadastradas sem esse campo. Para fazer esse relação entre dois bancos de daos utilizamos a opção `models.ForeignKey()` quando criamos o atributo na classe `Receita` e como parâmetros passamos a classe que será utilizada para preencher esse novo campo e a ação que o banco de dados realizará caso alguém exclua a entrada que está vinculada a nova tabela. Alguns exemplos de ações são:
 
-Como o nosso arquivo `views.py` ainda esta em branco, precisamos criar lá a função que irá responder a requisição definida no arquivo `urls.py`. No arquivo `views.py` precisamos importar o `HttpResponse` da biblioteca `django.http` e definir uma função com o nome `index`, já que foi esse o nome que especificamos no arquivo `urls.py`. Essa função terá como argumento `request` e retornará um `HttpResponde("codigo_html_a_ser_exibido")`.
+- RESTRICT: o banco de dados não permite que você atualize ou exclua o registro na tabela pai, se houver um registro na tabela filha vinculada a esse registro
+- CASCADE: o banco de dados automaticamente atualiza ou exclui os registros na tabela filha ao se atualizar algum registro ou excluir algum registro na tabela pai
+- SET NULL: Define como `null` o campo da tabela filha quando se atualiza ou exclui o registro na tabela pai
 
-```python
-def index(request):
-    return HttpResponse("<h1>Receitas</h1>")
-```
-
-Estamos quase conseguindo visualizar nossa applicação, mas antes disso precisamos incluir nosso arquivo `urls.py` dentro do arquivo de urls do nosso projeto. Para isso abrimos o arquivo `urls.py` do nosso projeto e dentro da lista `urlpatterns` criamos um novo `path` com o caminho vazio e damos un include em receitas.urls
-
-```python
-urlpatterns = [
-    path("", include("receitas.urls")),
-    path("admin/", admin.site.urls),
-]
-```
-
-Agora basta salvar todos os arquivos e podemos atualizar nosso navegadro em [localhost:8080](http://localhost:8080) que iremos visualizar o conteúdo da nossa primeira view. Contudo não seria nada prático desenvolver todo o HTML da nossa aplicação dentro da função `index` da nossa view.
-
-Então vamos utilizar o conceito de templates do django para armazenar nossos arquivos html que serão renderizados no navegador. Para isso criamos um diretório com o nome de `templates` dentro do diretório principal do projeto e registramos esse diretório lá no arquivo `settings.py` do nosso projeto. Esse registro deve ser feito dentro da lista `TEMPLATES = []` como valor da chave `"DIRS"` utilizando a estrutura de `os.path.join`
-
-```python
-TEMPLATES = [
-    { ...
-        "DIRS": [os.path.join(BASE_DIR, "templates)],
-        ...
-    }
-]
-```
-
-Devemos também criar um diretório com o nome do nosso app para deixar a pasta de templates organizada e escrever nossos arquivo html dentro dela. Como não vamos mais responder diretamente ao `request` podemos deletar a importação do `HttpResponse`no arquivo `views.py`, pois agora é a função `render` que irá retornar o nosso arquivo html renderizado. Essa função recebe como primeiro parâmetro o request que é passado na definição da nossa função `index` e como segundo parâmetro o caminho para o arquivo HTML que queremos exibir. Como já registramos o diretório `templates` dentro do arquivo `settings.py` só precisamos indicar o caminho a partir dai.
-
-```python
-from django.shortcuts import render
-
-def index(request):
-    return render(request, "receitas/index.html")
-```
-
-O django trata os arquivos de imagens, CSS e JavaScript como arquivos estáticos e tem uma maneira certa de trabalhar com eles. Para isso precisaremos definir onde colocaremos esses arquivos estáticos para o djando acessar e para onde ele pode fazer uma cópia desses arquivos para a melhor manipulação deles. Essas duas definições são feitas no arquivo `settings.py`, no final do arquivo com as seguintes variáveis
-
-```python
-STATIC_ROOT = os.path.join(BASE_DIR, "static")
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "livroreceitas/static"),
-]
-```
-
-Onde `STATIC_ROOT` é o diretório que o djano irá criar, na raiz do nosso projeto para copiar os arquivos estático que colocarmos dentro do diretório `static` que criaremos dentro de `livroreceitas`. Depois de adicionarmos os arquivos estáticos ao diretório `livroreceitas/static` precisamos “notificar”o django que adicionamos esses arquivos, para isso usamos o comando `python manage.py collectstatic`
-
-Porém isso não basta para que o nosso arquivo HTML encontre a localização dos arquivos estáticos, para isso precisamos fazer algumas indicações ao longo do arquivo. A primeira indicação que precisamos fazer é adicionar a seguinte tag no começo do arquivo HTML, como primeira linha `{% load static %}`, isso irá indicar para o nosso arquivo que algumas dependências do HTML estão em arquivos estáticos. A segunda indicação que devemos fazer é, sempre que um arquivo estático for referenciado ao longo do código, como quando colocamos o caminho para uma figura, o caminho para o arquivo CSS ou para um script JavaScript, precisamos envolver o caminho com a seguinte tag `{% static "caminho_para_o_recurso" %}`. Por exemplo
-
-```python
-Antes
-<a class="nav-brand" href="index.html"><img src="img/core-img/logo.png" alt=""></a>
-
-Depois
-<a class="nav-brand" href="index.html"><img src="{% static "img/core-img/logo.png" %}" alt=""></a>
-```
-
-Além da tag para demarcar conteúdos estáticos, outra tag muito importante. usada ao longo do HTML é a tag para fazer referência a outras páginas HTML. Quando temos um link para uma subpagina da nossa aplicação, devemos primeiro definir uma nova função no arquivo `views.py` para renderizar o conteúdo dessa nova página, registrar uma nova url, no arquivo `urls.py`, que utilizará a função definida anteriormente no arquivo `views.py` e durante o HTML usar a seguinte tag `{% url "nome_da_url" %}`, sendo que esse `nome_da_url` é aquele definido com a variável `name=` ao se adicionar uma nova url. Então, por exemplo, para exibir o conteúdo da página de receita ao clicar em um link na nossa pagina principal devemos fazer:
-
-Arquivo `views.py`:
-
-```python
-from django.shortcuts import render
-
-...
-
-def receita(request):
-    return render(request, "receitas/receita.html")
-```
-
-Arquivo `urls.py`:
-
-```python
-from django.urls import path
-from . import views
-
-urlpatterns = [
-    path("", views.index, name="index"),
-    path("receita/", views.receita, name="receita"),
-]
-```
-
-Arquivo HTML:
-
-```html
-...
-
-<a href="{% url "receita" %}">Receitas</a>
-
-...
-```
-
-Uma vez que repetimos uma grande quantidade de código quando estamos fazendo o HTML, principalmente no que se trata do `<head></head>` uma boa prática para não precisar repetir esse código e facilitar futuras manutenções é criar um arquivo com essa parte do código que será a base para a construção das outras páginas. Assim caso seja necessário alterar alguma coisa, só precisaremos alterar em um lugar.. Essa separação do conteúdo repetido é feita criando um arquivo HTML que normalmente recebe o nome de `base.html` e nele coloamos o cósigo que servirá de base para todas as nossas páginas. Precisamos então indicar onde o código de cada página será inserido, o que ocorre normalmente no começo da tag `<body></body>`. As tags django que usamo para isso são `{% block content %} {% endblock %}`. Já nos arquivos que representam as nossas páginas, precisamos adicionar a seguinte tag logo no começo do arquivo, antes mesmo da tag de `{% load static %}` é a tag `{% extends "caminho_para_o_arquivo_base.html" %}`. Por exemplo, caso o meu arquivo `base.html` fique junto dos meus outros arquivos HTML em `/templates/receitas/base.html`, devmos indicar o caminho `receitas/base.html`. Além disso precisamos também indicar onde começa e onde termina o çodigo que será adicionado no nosso arquivo `base.html`. Essa indicação é feita com as mesmas tags `{% block content %} {% endblock %}`, porém a primeira ficará no começo do arquivo e a segunda no final.
-
-Outros trechos de códigos que também são muito repetidos, são aqueles responsáveis por menus a parte superior das páginas e aqueles responsáveis pelo rodapé, pelo footer da página. Contudo nem sempre queremos utilizar esses nesmos trechos de códigos em todas as páginas, então não seria interessante inclui-los no `base.html`. Mas como queremos evitar código duplicado o que podemos fazer é criar `partials`, que são pedaços de códigos, que podem ser reutilizados em diferentes páginas. Para a melhor organização do nosso projeto podemos criar um novo diretório com o nome de `partials` e dentro desse diretório criar os arquivo que serão compartilhados entre diferentes páginas. Esses arquivos, por convenção começam com um underline no nome. Da mesma forma que para o arquivo `base.html`, se necessário, incluimos a tag `{% load static %}` no começo da partials, porém a forma de incluir partials no código das nossa páginas é um pouco diferente. Para isso utilizamos a tag `{% inclue "caminho_para_o_arquivo_da_partials.html" %}`. Por exemplo, uma partials responsável pelo menu superior de um site pode ter como nome `_menu.html` e sua inclusão duranto o HTML será:
-
-```html
-...
-
-{% include "receitas/partials/_menu.html" %}
-
-...
-```
-
-As nossas receitas estão chumbadas no HTML do index, pois forma adicionadas manualmente no código. Esse procedimento não é aconselhável, uma vez que sempre que quisermos adicionar uma nova receita será necessário editar o arquivo `index.html` e o django tem uma forma de facilitar isso. Inicialmnete precisamos criar um dicionário com os nomes das nossas receitas lá no arquivo `views.py`, esse dicionário será passado como um terceiro argumento na função `render`, que retorna a página a ser exibida. No entanto esse dicionário precisa estar dentro de outro dicionário, para podermos fazer um loop em seu conteúdo. a estrutura desse dicionárioa ficara assim:
-
-Arquivo `views.py`:
-
-```python
-from django.shortcuts import render
-
-...
-
-def index(request):
-    receitas = {
-        1: "Lasanha",
-        2: "Sopa de Legumes",
-        3: "Sovete",
-        4: "Bolo de chocolate",
-    }
-    lista_de_receitas = {"nome_das_receitas": receitas}
-    return render(request, "receitas/index.html", lista_de_receitas)
-```
-
-Agora precisamos alterar o arquivo `index.html`, para indicar onde o nome da receita deve ser substituido, além de fazer um loop para iterar em cada receita. Isso é feito com a tag `{% loop_for %}` do django, e dentro dela incluimos o nosso laço `for`, além dessa tag precisamos indicar também onde acaba nosso loop com a tag `{% endfor %}`. No nosso caso a tag do laço for ficará assim: `{% for chave, nome_da_receita in nome_das_receitas.items %}`. Dessa forma para cada entrada da chave `"nome_das_receitas"` do dicionário `lista_de_receitas` que criamos no arquivo `views.py` o django desempacotará uma  `chave`, que no caso é um número e um `nome_da_receita`, que é propriamente o nome da receita. Agora basta indicar no HTML, onde essa variável `nome_da_receita` aparecerá. Essa operação é realizada com a tag `{{ variavel_a_ser_exibida }}`. No django, quando usamos a tag `{% %}`, queremos que algum trecho de código seja executado/interpretado, já quando usamos a tag `{{ }}`, queremos que alguma variável seja exibida. Para exemplificar, o códi no arquivo `index.html` ficou assim:
-
-```html
-...
-
-{% for chave, nome_da_receita in nome_das_receitas.items %}
-        <!-- Single Best Receipe Area -->
-        <div class="col-12 col-sm-6 col-lg-4">
-          <div class="single-best-receipe-area mb-30">
-            <img src="{% static "img/bg-img/foto_receita.png" %}" alt="">
-            <div class="receipe-content">
-              <a href="{% url "receita" %}">
-                <h5>{{ nome_da_receita }}</h5>
-              </a>
-            </div>
-          </div>
-        </div>
-        {% endfor %}
-
-...
-```
-
-A melhor forma de armazenar os dados das nossas receitas é com um banco de dados. Nesse projeto vamos utilizar o banco de dados Postgresql. Após instalar e configurar o postgresql precisamos indicar para a nossa aplicação qual bando de dados vamos utilizar e as informações necessárias para acessar o DB. Essas configurações ficam no arquivo `settings.py` dentro do diretório principal do nosso projeto, em um dicionário chamado `DATABASES`. Por padrão nesse dicionário a engine do banco de dados será o sqlite3. Vamos alterar esse engine para postgresql, remover o `NAME` já existente para o nome do banco de dados criado no Postgresql e adicionar mais 3 entradas, uma para o usuário `USER`, uma para a senha do usuário `PASSWORD` e outra com o endereço do host `HOST`. Como algumas dessas informações são sensíveis, como a senha e o host, podemos armazenar essas informações no arquivo `.env`, junto com a `SECURITY_KEY`.
-
-Arquivo `.env`:
-
-```
-...
-
-POSTGRE_DB_NAME =  nome_do_banco_de_dados
-POSTGRE_DB_USER = nome_do_usuario_do_banco_de_dados
-POSTGRE_KEY = senha_do_usuario_do_banco_de_dados
-POSTGRE_HOST = endereco_do_banco_de_dados
-```
-
-Arquivo `settings.py`:
-
-```python
-...
-
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
-...
-
-POSTGRE_DB_NAME = str(os.getenv("POSTGRE_DB_NAME"))
-POSTGRE_DB_USER = str(os.getenv("POSTGRE_DB_USER"))
-POSTGRE_KEY = str(os.getenv("POSTGRE_KEY"))
-POSTGRE_HOST = str(os.getenv("POSTGRE_HOST"))
-
-...
-
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": POSTGRE_DB_NAME,
-        "USER": POSTGRE_DB_USER,
-        "PASSWORD": POSTGRE_KEY,
-        "HOST": POSTGRE_HOST,
-    }
-}
-```
-
-Para que o django consiga conversar com o Postgresql é necessário instalar dois pacotes via `pip`, o `psycopg2` e o `psycopg2-binaries`.
-
-Agora já podemos “modelar” o nosso banco de dados, definir os campos que o nosso banco de dados precisará para armazenar as informações sobre nossas receitas. Essas configurações ficam no arquivos `models.py` dentro do diretório do nosso applicativo. Segundo o django:
-
-> Um modelo é um único e definitiva fonte de dados sobre os seus dados, Ele contém os campos e comportamentos essenciais dos dados que você está armazenando. Em geral, cada modelo mapeia para uam única tabela no seu banco de dados.
-> 
-
-Cada modelo é definido com uma classe, que é uma subclasse de `models.Model`. Ao criar nossa classe podemos definir os campos que queremos no nosso DB e qual o formato deles. Por enquanto vamos utilizar apenas os seguintes formatos:
-
-- CharField: um campo para string de tamanho pequeno a grande, necessita de um tamanho maximo definido
-- TextField: um campo para um texto grande, não precisa de nenhum argumento
-- IntegerField: um campo para números inteiros de -2147483648 a 2147483648
-- DateTimeField: um campo para data e hora representado pelo formato de uma instância de `datetime.datetime` do python.
-
-Nosso modelo ficou com os seguintes campos:
+No nosso caso vamos utilizar a ação `CASCADE`. Assim o nosso modelo de receita ficou da seguinte forma:
 
 ```python
 from django.db import models
 from datetime import datetime
+from pessoas.models import Pessoa
 
 class Receita(models.Model):
+    pessoa = models.ForeignKey(Pessoa, on_delete=models.CASCADE)
     nome_receita = models.CharField(max_length=200)
     ingredientes = models.TextField()
     modo_preparo = models.TextField()
     tempo_preparo = models.IntegerField()
     rendimento = models.CharField(max_length=100)
     categoria = models.CharField(max_length=100)
-    data_receita = models.DateTimeField(default=datetime.now, blank=Tru
+    data_receita = models.DateTimeField(default=datetime.now, blank=True)
 ```
 
-Com esse modelo pronto podemos enviar essas informações para o nosso DB. Esse envio de informações é feito em duas etapas, primeiro utilizamos o comando `python manege.py makemigration` para que o django prepare um arquivo, dentro do diretório `migrations` do nosso app, contendo as informações do que será enviado para o DB e então utilizamos o comando `python manage.py migrate` para enviar, de fato, as informações para o DB.
+Após salvar as alterações basta preparar e realizar a migração.
 
-Uma parte importante do django também é a do admin, pois é nela, por exemplo que podemos adicionar e remover conteúdos da nossa aplicação. Para utilizar a parte de admin para a nossa aplicação precisamos primeiro registrar nossa aplicação no arquilo `admin.py` dentro do diretório do nosso app. Basta importar a classe referente a nossa aplicação do arquivo `models.py` e então registrar no admin com:
+Agora quando vamos adicionar uma nova receita, um novo campo, com uma lista de pessoas parece para selecionarmos quem é o responsável por aquela receita, porém na lista está aparecendo apenas `Pessoa object(id)`. Para evitar isso podemos definir a função `__str__` na nossa classe `Pessoa` para retornar o nome da seguinte maneira:
 
 ```python
-from django.contrib import admin
-from .models import Receita
+from django.db import models
 
-admin.site.register(Receita)
+class Pessoa(models.Model):
+    nome = models.CharField(max_length=200)
+    email = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.nome
 ```
 
-Além disso precisamos também criar um usuário para o nosso admin. Esse processo é feito com o comando `python manage.py createsuperuser`, então basta inserir o nome do usuário, o endereço de e-mail é opcional e a senha. Para a senha o próprio django sugere que ela senha maior do que 8 caracteres e que não seja muito comum, no entanto como é só um exemplo eu coloquei tanto o usuário quanto a senha como `admin`. Essas informações de usuário e senha são armazenadas no banco de dados, sendo que a senha é armazenada criptografada.
+Assim a nossa lista passará a exibir o nome da pessoa e não mais a referência para o objeto Pessoa. Outro lugar que precisamos fazer uma alteração para exibir o nome da pessoa é em `receita.html`. Como o nosso objeto `Receita` já contém as informações de `Pessoa` basta adicionar no lugar onde deve aparecer o nome da pessoa o seguinte código `{{ receita.pessoa }}`.
 
-Para acessar a página do admin basta adicionar `/admin` após a porta do endereço da aplicação, no caso [localhost:8000/admin](http://localhost:8000/admin). Acessando esse recusro podemos entrar com nosso usuário e senha e então adicionar uma nova receita. Os campos que aparecerão na hora de adicionar uma nova receita serão os mesmos que especificamos quando criamos o nosso modelo.
+Com a intenção de incluir receitas novas não finalizadas no site, mas sem exibi-las na página principal, vamos adicionar um novo campo na tabela de receitas que será um `models.BooleanField` com o parâmetro `default=False` no nosso modelo, assim por padrão todas as receitas que forem adicionadas na nossa aplicação não serão publicadas por engando. Depois de preparar e fazer essa migração o campo `publicada` já estará aparecendo na parte de adicionar uma nova receita, porém todas as receitas continuam aparecendo na nossa página principal e toda vez que precisamos alterar algo em uma receita precisamos abrir a receita, ir até o final da página para desmarcar a opção de `publicada`.
 
-Agora precisamos alterar a origem da lista de receitas que estão sendo mostradas no nosso site, pois precisamos usar as informações do banco de dados e não do dicionário que criamos em `views.py`. Para isso precisamos importar a nossa classe `Receita`do nosso arquivo `models.py` e alterar a nossa lista de receitas para todos os objetos que estão salvos no nosso DB. Isso é feito com o seguinte método `receitas = Receita.objects.all()`. Pois as nossas receitas são armazenadas como objetos no nosso DB. Agora é necessário alterar no arquivo HTML a forma como exibimos nossas receitas, uma vez que não temos mais a estrutura de id, nome_da_receita. Primeiro precisamos verificar se exite algo na listas de receitas com um `if`, então podemos fazer um loop para cada receita dentro de receitas e na hora de exibir a receita fazemos da mesma forma para acessar um atributo de um objeto que criamos em python, `receita.nome_receita`. O código todo fica da seguinte forma:
+Para resolver o primeiro, basta alterar como a lista de receitas esta sendo passada para a função que renderiza a home da nossa página em `views.py`. Não queremos mais passar todos os objetos e sim realizar um filtro para exibir apenas aqueles com a entrada `publicada` como `True`. Para isso trocamos a variável `receitas = Receita.objects.all()` para `receitas = Receita.objects.filter(publicada=True)`. Outro método que podemos adicionar nesse filtro é uma ordenação por data de publicação, por exemplo. Vamos utilizar o método `.order_by()` e como queremos que as ultimas receitas apareçam primeiro precisamos passar a `data_receita` em ordem decrescente da seguinte forma `receitas = Receita.objects.filter(publicada=True).order_by("-data_receita")`.
+
+O segundo problema pode ser resolvido adicionando a entrada `publicada` na lista de `list_display` dentro do arquivo `admin.py` e adiciona-la também em uma nova lista a `list_editable`, isso fará com que essa entrada apareça na página de gerenciamento de receitas como uma checkbox que pode ser marcada e desmarcada e com o botão de salvar podemos alterar o estado dessa entrada para cada receita.
+
+Todas as receitas estão com a mesma imagem, tanto na página principal, quanto na página que se refere a própria receita. Para mudar esse comportamento podemos permitir que quando alguém for fazer o cadastro de uma nova receita, essa possoa possa incluir uma imagem da receita. Será necessário criar uma nova entrada no banco de dados para armazenar o caminho para essa imagem, que será enviada para nossa página. O formato que teremos que utilizar é `models.ImageField()`, o primeiro argumento que vamos passar para esse modelo é o local onde ele poderá armazenar as imagens. Podemos fazer com que ele salve as imagens de acordo com o ano/mes/dia que a imagem foi enviada, assim será fácil acessar qualquer imagem caso seja necessário. O segundo argumento que vamos passar para esse modelo é que essa entrada pode ser deixada em branco caso o usuário escolha não enviar nenhuma imagem. A nossa nova entrada ficou assim `foto_receita = models.ImageField(upload_to="fotos/%Y/%m/%d/", blank=True)`. Antes de preparar e enviar a migração para o banco de dados precisamos usar o `pip` para instalar o modulo `Pillow` para lidar com as imagens. `python -m pip install Pillow`. É necessário também adicionar as configurações para se trabalhar com arquivos de media no nosso arquivo `settings.py` do nosso projeto. Ao final do arquivo vamos adicionar duas linha, uma contendo o caminho para a `MEDIA_ROOT` e outro para a `MEDIA_URL`, assim vamos especificar onde vamos armazenar as imagens que serão enviadas para a nossa página de receitas e o caminho para elas.
 
 ```python
+...
+
+# Media
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+MEDIA_URL = "/media/"
+```
+
+Agora basta preparar e realizar a migração para o banco de dados e enviar uma imagem para fazer o teste.
+
+É necessario alterar também os arquivos HTML para poder exibir as imagens específicas para cada receita, porém caso a receita não tenha uma imagem vamos continuar a exibir a imagem padrão. Para fazer essa verificação basta utilizar código python dentro do arquivo HTML e verificar se o atributo `receita.foto_receita` está em branco ou não, caso estaje em branco vamos direcionar o caminho para a imagem que já estamos utilizando, caso contrário, vamos direcionar para o caminho da imagem que foi enviada. Esse caminho é acessível através do método `.url` do atributo da nossa imagem `receita.foto_receita.url`
+
+```html
+ ...
+
+          {% if receita.foto_receita == "" %}
+              <img src="{% static "img/bg-img/tomate_banner.jpg" %}">
+          {% else %}
+              <img src="{{ receita.foto_receita.url }}" alt="">
+          {% endif %}
+
+...
+```
+
+Uma próxima funcionalidade que podemos incluir na nossa aplicação é a de realizar uma pesquisa por uma palavra especifica. Vamos iniciar criando uma nova rota em `urls.py` para a pégina de busca `path("buscar/", views.buscar, name="buscar")`. O próximo passo é alterar na partials `_menu.html` o comportamento do componente de busca das nossas páginas, para isso vamos alterar a tag `<form action="#" method="post">` para que a `action` redirecione para a url de busca que definimos acima.
+
+```html
+<div class="container">
+    <div class="row">
+      <div class="col-12">
+        <form action="{% url "buscar" %}">
+          <input type="search" name="search" placeholder="O que está procurando...">
+          <button type="submit"><i class="fa fa-search" aria-hidden="true"></i></button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+Ao executar o código agora o navegador apresentará um erro, pois ainda não criamos nem a função `views.buscar` para responder a requisição, nem a página que será exibida. A função `views.buscar` precisa de um comportamento parecido com a a `views.index` no sentido de que precisa criar uma lista das receitas a serem exibidas e retornar essa lista no render da função. Para isso vamos come;car com uma variável que receberá todos os objetos, igual em `views.py`, depois vamos verificar se foi passada algum parâmetro na requisição HTML que recebemos. Como o nosso parâmetro para busca, no arquivo `_menu.html` ficou como `search` é por essa chave que devemos buscar. Essa busca é feita com o método `in` e para compara com a requisição utilizamo o método `.GET` no request `if "search" in request.GET:`. Agora precisamos recuperar a valor atribuido a essa chave. Utilizamos o mesmo método `.GET`, mas agora com uma lista contendo a chave que queremos. Basta então utilizar o método `.filter` na variável com todos os objetos de `Receitas` passando como parâmetro o atributo `nome_receita` que contenha as letras que buscamos. A verificação se o atributo nome_receita contém as letras da busca utilizamos o `__icontains=variavel_com_a_busca`. O código todo ficou assim:
+
+```python
+def buscar(request):
+    receitas = Receita.objects.filter(publicada=True).order_by("-data_receita")
+    if "search" in request.GET:
+        nome_receita = request.GET["search"]
+        if nome_receita:
+            receitas = receitas.filter(nome_receita__icontains=nome_receita)
+    lista_de_receitas = {"receitas": receitas}
+    return render(request, "receitas/buscar.html", lista_de_receitas)
+```
+
+Agora falta apenas criar a página HTML da busca. Podemos copiar a página index porém alterando o comportamento para quando a lista de receitas a serem renderizadas estiver vazia, ao invés de mostrar a página sem nenhum conteúdo exibir um aviso como `Receita não encontrada`. Para isso basta, depois do `else` da verificação das receitas, criar algumas tags HTML para exibir o recado.
+
+```html
+<!-- ##### Best Receipe Area Start ##### -->
+  <section class="best-receipe-area">
+
+    ...
+
         {% if receitas %}
         {% for receita in receitas %}
 
-...
-
-                <h5>{{ receita.nome_receita }}</h5>
-...
+		...
 
         {% endfor %}
         {% else %}
+            <div class="col-12 col-sm-6 col-lg-4">
+              <p>Receita não encontrada</p>
+            </div>
         {% endif %}
+
+		...
+
+  </section>
+  <!-- ##### Best Receipe Area End ##### -->
 ```
 
-O neovim irá apresentar um erro quando tentarmos utilizar o método para retornar todos os objetos do tipo `Receita` do nosso DB, para contornar esse erro basta instalar o modulo `django_stubs` com o `pip`.
+A administração do django possui uma parte onde é possível criar gurpos e usuários com premissões específicas para determinadas tarefas, como adicionar ou remover pessoas, receitas, alterar o conteúdo dessas aplicações, criar novos usuários e assim por diante.
 
-Ao acessar a página da receita, ainda estará aparecendo o template básico da receita, pois não passamos o conteudo do nosso DB para o arquivo `receita.html`. Primeiro precisamos de uma maneira de identificar cada receita individualmente e uma das melhores formas de fazer isso é com o id da receita. Para acessar o id da receita basta no arquivo `index.html`, no campo onde passamos a url da nossa página da receita, indicar `receita.id` da seguinte maneira `<a href="{% url "receita"receita.id %}">`. Isso fará com que quando acessarmos alguma receita, ao invés de o endereço mudara para [localhost:8000/receita](http://localhost:8000/receita) ele ira mudar para [localhost:8000/1](http://localhost:8000/id) no caso da receita com id 1. Por isso devemos alterar também nosso arquivo `urls.py` para que ele direcione corretamente nossa página. Essa mudança é simples, agora o nosso arquivo `urls.py` não vai mais usar o parâmetro `path("receita/")` e sim `path("<int:receita_id>")`. O `receita_id` é apenas uma variável que vamos utilizar para capturar o id como forma de um inteiro.
-
-O próximo arquivo que devemos alterar é o arquivo `views.py`, onde vamos especificar que além do request, a função responsável por renderizar a página de receitas também vai receber a variável `receita_id` como parâmetro. Definimos então uma variável para receber o objeto Receita armazenado no nosso banco de dados. Para fazer essa busca no banco de dados utilizamos a função `get_object_or_404()` do django, que precisa ser importada junto com a função render. Essa função retorna o objeto que estamos procurando ou um erro 404, sendo que precisamos identificar qual é o objeto que queremos buscar e qual a chave que vamos utilizar para fazer essa busca, no nosso caso vamos utilizar uma primary key (pk) que será igual ao parâmetro `receita_id`. Agora basta criar um dicionário com esse a variável que foi atribuida o objeto e passar esse dicionário junto com a função render. O código todo ficou assim:
-
-```python
-from django.shortcuts import render, get_object_or_404
-from .models import Receita
-
-...
-
-def receita(request, receita_id):
-    receita = get_object_or_404(Receita, pk=receita_id)
-    receita_a_exibir = {"receita": receita}
-    return render(request, "receitas/receita.html", receita_a_exibir)
-```
-
-Agora basta acessar o arquivo `receita.html` e alterar os campos que estão com informações de exemplo pela informações que queremos exibir as informações das nossas receitas e estão armazenadas no nosso DB usando a sintaxe `{{ receita.atributo }}`. Uma ultima alteração que precisamos fazer é que no nosso arquivo de partials `_menu.html` especificamos um endereço de url para receitas que não estamos utilizando mais, portanto, por hora, vamos excluir essa parte do código.
+Assim como fizemos com a aplicação de pessoas, vamos definir uma função `__str__` para a aplicação `Receitas`, que irá retornar o nome da receita, assim, quando fizermos alguma alteração nas receitas o recado que o django irá exibir será com o nome da receita e não mais com Object(x).
