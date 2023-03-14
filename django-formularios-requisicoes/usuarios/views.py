@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
-from django.contrib import auth
+from django.contrib import auth, messages
 from receitas.models import Receita
 
 
@@ -10,19 +10,19 @@ def cadastro(request):
         email = request.POST["email"]
         senha1 = request.POST["password"]
         senha2 = request.POST["password2"]
-        if not nome.strip():
-            print("O campo 'nome' está em branco")
+        if campo_em_branco(nome):
+            messages.error(request, "O campo 'nome' está em branco")
             return render(request, "usuarios/cadastro.html")
-        if senha1 != senha2:
-            print("As senhas são diferentes")
+        if senhas_diferentes(senha1, senha2):
+            messages.error(request, "As senhas inseridas são diferentes")
             return render(request, "usuarios/cadastro.html")
-        if User.objects.filter(email=email).exists():
-            print("Usuário já cadastrado")
+        if exite_atributo_email(email) or exite_atributo_user(nome):
+            messages.error(request, "Usuário já cadastrado")
             return render(request, "usuarios/cadastro.html")
         user = User.objects.create(username=nome, email=email)
         user.set_password(senha1)
         user.save()
-        print("Usuário criado com sucesso!")
+        messages.success(request, "Usuário cadastrado com sucesso")
         return redirect("login")
     else:
         return render(request, "usuarios/cadastro.html")
@@ -32,10 +32,12 @@ def login(request):
     if request.method == "POST":
         email = request.POST["email"]
         senha = request.POST["senha"]
-        if not email.strip() or not senha.strip():
-            print("Os campos de e-mail e senha não podem ficar em branco")
+        if campo_em_branco(email) or campo_em_branco(senha):
+            messages.error(
+                request, "Os campos de e-mail e senha não podem ficar em branco"
+            )
             return render(request, "usuarios/login.html")
-        if User.objects.filter(email=email).exists():
+        if exite_atributo_email(email):
             username = (
                 User.objects.filter(email=email)
                 .values_list("username", flat=True)
@@ -44,10 +46,9 @@ def login(request):
             user = auth.authenticate(request, username=username, password=senha)
             if user is not None:
                 auth.login(request, user)
-                print("Login realizado com sucesso")
                 return redirect("dashboard")
         else:
-            print("Usuário não cadastrado")
+            messages.error(request, "Usuário não cadastrado")
             return render(request, "usuarios/login.html")
     else:
         return render(request, "usuarios/login.html")
@@ -92,3 +93,19 @@ def criar_receita(request):
         return redirect("dashboard")
     else:
         return render(request, "usuarios/criar_receita.html")
+
+
+def campo_em_branco(campo):
+    return not campo.strip()
+
+
+def senhas_diferentes(senha1, senha2):
+    return senha1 != senha2
+
+
+def exite_atributo_email(email):
+    return User.objects.filter(email=email).exists()
+
+
+def exite_atributo_user(user):
+    return User.objects.filter(username=user).exists()
