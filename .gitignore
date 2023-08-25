@@ -15,3 +15,4 @@ env
 __pycache__
 */.idea/
 *.tool-version*
+*.ipynb_checkpoints*
