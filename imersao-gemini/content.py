@@ -8,6 +8,10 @@ api_key = str(os.getenv("API_KEY"))
 
 genai.configure(api_key=api_key)
 
+# for m in genai.list_models():
+#     if "generateContent" in m.supported_generation_methods:
+#         print(m.name)
+
 generation_config = {
   "temperature": 0.9,
   "top_p": 0.95,
